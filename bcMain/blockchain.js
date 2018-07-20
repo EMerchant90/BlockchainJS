@@ -1,11 +1,15 @@
 // Bring in dependency of hash - sha256
 var sha256 = require('sha256');
+var currentNodeURL = process.argv[3];
 
 function Blockchain() {
   // All blocks will be stored here
   this.chain = [];
   // Will hold all transctions before going into blocks
   this.pendingTransactions = [];
+
+  this.currentNodeURL = currentNodeURL;
+  this.networkNodes = [];
 
   this.createBlock(100, '0', '0');
 };

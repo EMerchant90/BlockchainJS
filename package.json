@@ -5,7 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --watch bcMain -e js bcMain/api.js"
+    "node1": "nodemon --watch bcMain -e js bcMain/networkNode.js 3001 http://localhost:3001",
+    "node2": "nodemon --watch bcMain -e js bcMain/networkNode.js 3002 http://localhost:3002",
+    "node3": "nodemon --watch bcMain -e js bcMain/networkNode.js 3003 http://localhost:3003",
+    "node4": "nodemon --watch bcMain -e js bcMain/networkNode.js 3004 http://localhost:3004",
+    "node5": "nodemon --watch bcMain -e js bcMain/networkNode.js 3005 http://localhost:3005"
   },
   "author": "",
   "license": "ISC",
@@ -13,6 +17,8 @@
     "body-parser": "^1.18.3",
     "express": "^4.16.3",
     "nodemon": "^1.18.2",
+    "request": "^2.87.0",
+    "request-promise": "^4.2.2",
     "sha256": "^0.2.0",
     "uuid": "^3.3.2"
   }

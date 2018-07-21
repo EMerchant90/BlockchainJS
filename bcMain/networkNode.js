@@ -21,10 +21,35 @@ app.get('/blockchain', function (req, res) {
 
 // create a new transaction
 app.post('/transaction', function (req, res) {
-  var blockIndex = ejazcoin.createNewTransaction(req.body.amount, req.body.sender, req.body.recipient);
-  res.json({ note: `Transaction will be added in block ${blockIndex}.`});
+  var newTransaction = req.body;
+  var blockIndex = ejazcoin.addTransactionToPendingTransactions(newTransaction);
+  res.json({ note: `Transaction will be added in block ${blockIndex}.` });
+  // var blockIndex = ejazcoin.createNewTransaction(req.body.amount, req.body.sender, req.body.recipient);
+  // res.json({ note: `Transaction will be added in block ${blockIndex}.` });
   // console.log(req.body);
   // res.send(`The amount of transaction is ${req.body.amount} ejazCoin.`);
+});
+
+app.post('/transaction/broadcast', function(req, res) {
+  var newTransaction = ejazcoin.createNewTransaction(req.body.amount, req.body.sender, req.body.recipient);
+  ejazcoin.addTransactionToPendingTransactions(newTransaction);
+
+  var requestPromises = [];
+  ejazcoin.networkNodes.forEach(networkNodeUrl => {
+    var requestOptions = {
+      uri: networkNodeUrl + '/transaction',
+      method: 'POST',
+      body: newTransaction,
+      json: true
+    };
+
+    requestPromises.push(rp(requestOptions));
+  });
+
+  Promise.all(requestPromises)
+  .then(data => {
+    res.json({ note: 'Transaction created and broadcast successfully.' });
+  });
 });
 
 // mine a block
@@ -37,15 +62,63 @@ app.get('/mine', function (req, res) {
   };
   var nonce = ejazcoin.proofOfWork(previousBlockHash, currentBlockData);
   var blockHash = ejazcoin.hashBlock(previousBlockHash, currentBlockData, nonce);
-
-  ejazcoin.createNewTransaction(18, "00", nodeAddress);
-
   var newBlock = ejazcoin.createBlock(nonce, previousBlockHash, blockHash);
 
-  res.json({
-    note: "New block mined successfully",
-    block: newBlock
+  var requestPromises = [];
+  ejazcoin.networkNodes.forEach(networkNodeUrl => {
+    var requestOptions = {
+      uri: networkNodeUrl + '/receive_new_block',
+      method: 'POST',
+      body: { newBlock: newBlock },
+      json: true
+    };
+
+    requestPromises.push(rp(requestOptions));
   });
+
+  Promise.all(requestPromises)
+  .then(data => {
+    var requestOptions = {
+      uri: ejazcoin.currentNodeURL + '/transaction/broadcast',
+      method: 'POST',
+      body: {
+        amount: 12.5,
+        sender: "00",
+        recipient: nodeAddress
+      },
+      json: true
+    };
+
+    return rp(requestOptions);
+  })
+  .then(data => {
+    res.json({
+      note: "New block mined & broadcast successfully",
+      block: newBlock
+    });
+  });
+});
+
+
+app.post('/receive_new_block', function (req, res) {
+  var newBlock = req.body.newBlock;
+  var lastBlock = ejazcoin.getLastBlock();
+  var correctHash = lastBlock.hash === newBlock.previousBlockHash;
+  var correctIndex = lastBlock['index'] + 1 === newBlock['index'];
+
+  if (correctHash && correctIndex) {
+    ejazcoin.chain.push(newBlock);
+    ejazcoin.pendingTransactions = [];
+    res.json({
+      note: 'New block received and accepted.',
+      newBlock: newBlock
+    });
+  } else {
+    res.json({
+      note: 'New block rejected.',
+      newBlock: newBlock
+    });
+  }
 });
 
 

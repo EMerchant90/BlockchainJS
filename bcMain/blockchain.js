@@ -1,6 +1,7 @@
 // Bring in dependency of hash - sha256
 var sha256 = require('sha256');
 var currentNodeURL = process.argv[3];
+var uuid = require('uuid/v1');
 
 function Blockchain() {
   // All blocks will be stored here
@@ -41,18 +42,20 @@ Blockchain.prototype.getLastBlock = function() {
 
 // Create a new method to create a new transaction
 Blockchain.prototype.createNewTransaction = function(amount, sender, recipient) {
-  // Create trans object
   var newTransaction = {
     amount: amount,
     sender: sender,
-    recipient: recipient
+    recipient: recipient,
+    transactionID: uuid().split('-').join('')
   };
 
-  // Push new transactions to pending transactions
-  this.pendingTransactions.push(newTransaction);
-  // Returns the index of new transaction
+  return newTransaction;
+};
+
+Blockchain.prototype.addTransactionToPendingTransactions = function(transactionObj) {
+  this.pendingTransactions.push(transactionObj);
   return this.getLastBlock()['index'] + 1;
-}
+};
 
 // Creating a sha256 from library/dependency
 Blockchain.prototype.hashBlock = function(previousBlockHash, currentBlockData, nonce) {

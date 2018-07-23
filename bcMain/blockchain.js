@@ -1,4 +1,3 @@
-// Bring in dependency of hash - sha256
 var sha256 = require('sha256');
 var currentNodeURL = process.argv[3];
 var uuid = require('uuid/v1');
@@ -82,7 +81,31 @@ Blockchain.prototype.proofOfWork = function(previousBlockHash, currentBlockData)
   }
 
   return nonce;
-}
+};
+
+
+Blockchain.prototype.chainIsValid = function(blockchain) {
+  var validChain = true;
+
+  for (var i = 1; i < blockchain.length; i++) {
+    var currentBlock = blockchain[i];
+    var previousBlock = blockchain[i - 1];
+    var blockHash = this.hashBlock(previousBlock['hash'], { transaction: currentBlock['transactions'], index: currentBlock['index'] }, currentBlock['nonce']);
+
+    if (blockHash.substring(0, 4) !== '0000') validChain = false;
+    if (currentBlock['previousBlockHash'] !== previousBlock['hash']) validChain = false;
+  };
+
+  var genesisBlock = blockchain[0];
+  var correctNonce = genesisBlock['nonce'] === 100;
+  var correctPreviousBlockHash = genesisBlock['previousBlockHash'] === '0';
+  var correctHash = genesisBlock['hash'] === '0';
+  var correctTransactions = genesisBlock['transactions'].length === 0;
+
+  if (!correctNonce || !correctPreviousBlockHash || !correctHash || !correctTransactions) validChain = false;
+
+  return validChain;
+};
 
 
 module.exports = Blockchain;

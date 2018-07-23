@@ -179,8 +179,49 @@ app.post('/register_nodes_bulk', function(req, res) {
 });
 
 
+app.get('/consensus', function(req, res) {
+  var requestPromises = [];
+  ejazcoin.networkNodes.forEach(networkNodeUrl => {
+    var requestOptions = {
+      uri: networkNodeUrl + '/blockchain',
+      method: 'GET',
+      json: true
+    };
 
+    requestPromises.push(rp(requestOptions));
+  });
 
+  Promise.all(requestPromises)
+  .then(blockchains => {
+    var currentChainLength = ejazcoin.chain.length;
+    var maxChainLength = currentChainLength;
+    var newLongestChain = null;
+    var newPendingTransactions = null;
+
+    blockchains.forEach(blockchain => {
+      if (blockchain.chain.length > maxChainLength) {
+        maxChainLength = blockchain.chain.length;
+        newLongestChain = blockchain.chain;
+        newPendingTransactions = blockchain.pendingTransactions;
+      };
+    });
+
+    if (!newLongestChain || (newLongestChain && !ejazcoin.chainIsValid(newLongestChain))) {
+      res.json ({
+        note: 'Current chain has not been replaced.',
+        chain: ejazcoin.chain
+      });
+    }
+    else {
+      ejazcoin.chain = newLongestChain;
+      ejazcoin.pendingTransactions = newPendingTransactions;
+      res.json({
+        note: 'This chain has been repaced.',
+        chain: ejazcoin.chain
+      });
+    }
+  });
+});
 
 
 app.listen(port, function() {

@@ -85,7 +85,7 @@ Blockchain.prototype.proofOfWork = function(previousBlockHash, currentBlockData)
 
 
 Blockchain.prototype.chainIsValid = function(blockchain) {
-  var validChain = true;
+  let validChain = true;
 
   for (var i = 1; i < blockchain.length; i++) {
     var currentBlock = blockchain[i];

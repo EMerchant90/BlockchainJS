@@ -234,12 +234,21 @@ app.get('/block/:blockHash', function(req, res) {
 
 
 app.get('/transaction/:transactionID', function(req, res) {
-
+  var transactionId = req.params.transactionID;
+  var transactionData = ejazcoin.getTransaction(transactionId);
+  res.json({
+    transaction: transactionData.transaction,
+    block: transactionData.block
+  })
 });
 
 
 app.get('/address/:address', function(req, res) {
-
+  var address = req.params.address;
+  var addressData = ejazcoin.getAddressData(address);
+  res.json({
+    address: addressData
+  });
 });
 
 

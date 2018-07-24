@@ -224,6 +224,35 @@ app.get('/consensus', function(req, res) {
 });
 
 
+app.get('/block/:blockHash', function(req, res) {
+  var blockHash = req.params.blockHash;
+  var correctBlock = ejazcoin.getBlock(blockHash);
+  res.json({
+    block: correctBlock
+  });
+});
+
+
+app.get('/transaction/:transactionID', function(req, res) {
+  var transactionId = req.params.transactionID;
+  var transactionData = ejazcoin.getTransaction(transactionId);
+  res.json({
+    transaction: transactionData.transaction,
+    block: transactionData.block
+  })
+});
+
+
+app.get('/address/:address', function(req, res) {
+  var address = req.params.address;
+  var addressData = ejazcoin.getAddressData(address);
+  res.json({
+    address: addressData
+  });
+});
+
+
+
 app.listen(port, function() {
   console.log(`Listening on port ${port}....`);
 });
